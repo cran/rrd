@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# rrd
+# rrd <img src='man/figures/rrd-logo.png' align="right" height="139" />
 
 [![Build
 Status](https://travis-ci.org/andrie/rrd.svg?branch=master)](https://travis-ci.org/andrie/rrd)
@@ -11,42 +11,35 @@ status](https://www.r-pkg.org/badges/version/rrd)](https://cran.r-project.org/pa
 [![](http://www.r-pkg.org/badges/version/rrd)](http://www.r-pkg.org/pkg/rrd)
 [![CRAN RStudio mirror
 downloads](http://cranlogs.r-pkg.org/badges/rrd)](http://www.r-pkg.org/pkg/rrd)
-[![Coverage
-Status](https://img.shields.io/codecov/c/github/andrie/rrd/master.svg)](https://codecov.io/github/andrie/rrd?branch=master)
+[![Codecov test
+coverage](https://codecov.io/gh/andrie/rrd/branch/master/graph/badge.svg)](https://codecov.io/gh/andrie/rrd?branch=master)
 
 The `rrd` package allows you to read data from an
-[RRD](http://oss.oetiker.ch/rrdtool/) database.
-
-Internally it uses
-[librrd](http://oss.oetiker.ch/rrdtool/doc/librrd.en.html) to import the
-binary data directly into R without exporting it to an intermediate
-format first.
-
-For an introduction to RRD database, see
-<https://oss.oetiker.ch/rrdtool/tut/rrd-beginners.en.html>
+[RRD](http://oss.oetiker.ch/rrdtool/) Round Robin Database.
 
 ## Installation
 
-### Pre-requisites
+### System requirements
 
 In order to build the package from source you need
 [librrd](http://oss.oetiker.ch/rrdtool/doc/librrd.en.html). Installing
 [RRDtool](http://oss.oetiker.ch/rrdtool/) from your package manager will
-usually also install the library.
+usually also install the
+library.
 
-In ubuntu:
+| Platform        | Installation                 | Reference                                               |
+| --------------- | ---------------------------- | ------------------------------------------------------- |
+| Debian / Ubuntu | `apt-get install librrd-dev` |                                                         |
+| RHEL / CentOS   | `yum install rrdtool-devel`  |                                                         |
+| Fedora          | `dnf install rrdtool-devel`  | <https://apps.fedoraproject.org/packages/rrdtool-devel> |
+| Solaris / CSW   | Install `rrdtool`            | <https://www.opencsw.org/packages/rrdtool/>             |
+| OSX             | `brew install rrdtool`       |                                                         |
+| Windows         | Not available                |                                                         |
 
-``` sh
-sudo apt-get install rrdtool librrd-dev
-```
+Note: on OSX you may have to update `xcode`, using `xcode-select
+--install`.
 
-In RHEL / CentOS:
-
-``` sh
-sudo yum install rrdtool rrdtool-devel
-```
-
-### Installing
+### Package installation
 
 You can install the stable version of the package from CRAN:
 
@@ -57,23 +50,37 @@ install.packages("rrd")
 And the development version from [GitHub](https://github.com/):
 
 ``` r
-# install.packages("devtools")
-devtools::install_github("andrie/rrd")
+# install.packages("remotes")
+remotes::install_github("andrie/rrd")
 ```
+
+## About RRD and RRDtool <img src='man/figures/rrdtool-logo.png' align="right" height="70" />
+
+The `rrd` package is a wrapper around `RRDtool`. Internally it uses
+[librrd](http://oss.oetiker.ch/rrdtool/doc/librrd.en.html) to import the
+binary data directly into R without exporting it to an intermediate
+format first.
+
+For an introduction to RRD database, see
+<https://oss.oetiker.ch/rrdtool/tut/rrd-beginners.en.html>
 
 ## Example
 
-In R:
+The package contains some example RRD files that originated in an
+instance of RStudio Connect. In this example, you analyse CPU data in
+the file `cpu-0.rrd`.
+
+Load the package and assign the location of the `cpu-0.rrd` file to a
+variable:
 
 ``` r
 library(rrd)
+rrd_cpu_0 <- system.file("extdata/cpu-0.rrd", package = "rrd")
 ```
 
 To describe the contents of an RRD file, use `describe_rrd()`:
 
 ``` r
-rrd_cpu_0 <- system.file("extdata/cpu-0.rrd", package = "rrd")
-
 describe_rrd(rrd_cpu_0)
 #> A RRD file with 10 RRA arrays and step size 60
 #> [1] AVERAGE_60 (43200 rows)
@@ -120,7 +127,7 @@ names(cpu)
 cpu[[1]]
 #> # A tibble: 43,199 x 9
 #>    timestamp              user     sys  nice  idle  wait   irq softirq
-#>  * <dttm>                <dbl>   <dbl> <dbl> <dbl> <dbl> <dbl>   <dbl>
+#>    <dttm>                <dbl>   <dbl> <dbl> <dbl> <dbl> <dbl>   <dbl>
 #>  1 2018-04-02 12:24:00 0.0104  0.00811     0 0.981     0     0       0
 #>  2 2018-04-02 12:25:00 0.0126  0.00630     0 0.979     0     0       0
 #>  3 2018-04-02 12:26:00 0.0159  0.00808     0 0.976     0     0       0
@@ -131,7 +138,7 @@ cpu[[1]]
 #>  8 2018-04-02 12:31:00 0.0193  0.00767     0 0.971     0     0       0
 #>  9 2018-04-02 12:32:00 0.0300  0.0274      0 0.943     0     0       0
 #> 10 2018-04-02 12:33:00 0.0162  0.00617     0 0.978     0     0       0
-#> # ... with 43,189 more rows, and 1 more variable: stolen <dbl>
+#> # … with 43,189 more rows, and 1 more variable: stolen <dbl>
 
 tail(cpu$AVERAGE60$sys)
 #> [1] 0.0014390667 0.0020080000 0.0005689333 0.0000000000 0.0014390667
@@ -154,32 +161,37 @@ avg_60 <- read_rra(rrd_cpu_0, cf = "AVERAGE", step = 60, n_steps = 24 * 60,
 
 avg_60
 #> # A tibble: 1,440 x 9
-#>    timestamp              user      sys  nice  idle     wait   irq softirq
-#>  * <dttm>                <dbl>    <dbl> <dbl> <dbl>    <dbl> <dbl>   <dbl>
-#>  1 2018-05-01 00:01:00 0.00458 0.00201      0 0.992 0            0       0
-#>  2 2018-05-01 00:02:00 0.00258 0.000570     0 0.996 0            0       0
-#>  3 2018-05-01 00:03:00 0.00633 0.00144      0 0.992 0            0       0
-#>  4 2018-05-01 00:04:00 0.00515 0.00201      0 0.991 0            0       0
-#>  5 2018-05-01 00:05:00 0.00402 0.000569     0 0.995 0            0       0
-#>  6 2018-05-01 00:06:00 0.00689 0.00144      0 0.992 0            0       0
-#>  7 2018-05-01 00:07:00 0.00371 0.00201      0 0.993 0.00144      0       0
-#>  8 2018-05-01 00:08:00 0.00488 0.00201      0 0.993 0.000569     0       0
-#>  9 2018-05-01 00:09:00 0.00748 0.000568     0 0.992 0            0       0
-#> 10 2018-05-01 00:10:00 0.00516 0            0 0.995 0            0       0
-#> # ... with 1,430 more rows, and 1 more variable: stolen <dbl>
+#>    timestamp              user     sys  nice  idle    wait   irq softirq
+#>    <dttm>                <dbl>   <dbl> <dbl> <dbl>   <dbl> <dbl>   <dbl>
+#>  1 2018-05-01 00:01:00 0.00458 2.01e-3     0 0.992 0.          0       0
+#>  2 2018-05-01 00:02:00 0.00258 5.70e-4     0 0.996 0.          0       0
+#>  3 2018-05-01 00:03:00 0.00633 1.44e-3     0 0.992 0.          0       0
+#>  4 2018-05-01 00:04:00 0.00515 2.01e-3     0 0.991 0.          0       0
+#>  5 2018-05-01 00:05:00 0.00402 5.69e-4     0 0.995 0.          0       0
+#>  6 2018-05-01 00:06:00 0.00689 1.44e-3     0 0.992 0.          0       0
+#>  7 2018-05-01 00:07:00 0.00371 2.01e-3     0 0.993 1.44e-3     0       0
+#>  8 2018-05-01 00:08:00 0.00488 2.01e-3     0 0.993 5.69e-4     0       0
+#>  9 2018-05-01 00:09:00 0.00748 5.68e-4     0 0.992 0.          0       0
+#> 10 2018-05-01 00:10:00 0.00516 0.          0 0.995 0.          0       0
+#> # … with 1,430 more rows, and 1 more variable: stolen <dbl>
 ```
 
 And you can easily plot using your favourite packages:
 
 ``` r
 library(ggplot2)
+#> Registered S3 methods overwritten by 'ggplot2':
+#>   method         from 
+#>   [.quosures     rlang
+#>   c.quosures     rlang
+#>   print.quosures rlang
 ggplot(avg_60, aes(x = timestamp, y = user)) + 
   geom_line() +
   stat_smooth(method = "loess", span = 0.125, se = FALSE) +
   ggtitle("CPU0 usage, data read from RRD file")
 ```
 
-<img src="man/figures/README-unnamed-chunk-1-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-1-1.png" width="90%" />
 
 ## More information
 
